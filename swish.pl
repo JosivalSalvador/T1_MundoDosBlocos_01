@@ -20,6 +20,6 @@ can(mover(Bloco, De, Para), State, [limpar(Bloco), limpar(Para)]) :-
     holds(limpar(Bloco), State),
     holds(limpar(Para), State).
 
-% Fatos iniciais (exemplo de teste)
+% Fatos iniciais (exemplo de teste1)
 em(a, posicao1).
 em(b, posicao2).
