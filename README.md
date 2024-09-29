@@ -54,6 +54,7 @@ Após a instalação do SWI-Prolog, você pode executar o código da seguinte ma
 O comando resolver. irá gerar um plano de ações para mover os blocos do estado inicial ao estado final. Você pode verificar o estado atual dos blocos utilizando o comando:
    ```prolog
    ?- estado.
+```
 
 ## Estrutura do Código
 
