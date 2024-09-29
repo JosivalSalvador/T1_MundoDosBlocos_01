@@ -21,8 +21,7 @@ Para executar este código, você precisará do SWI-Prolog instalado em seu sist
    brew install swi-prolog
 
 ### Linux
-
-    A instalação pode ser feita através do gerenciador de pacotes da sua distribuição. Para Ubuntu, você pode usar:
+1. A instalação pode ser feita através do gerenciador de pacotes da sua distribuição. Para Ubuntu, você pode usar:
     ```bash
     sudo apt-get install swi-prolog
 
@@ -56,16 +55,16 @@ O comando resolver. irá gerar um plano de ações para mover os blocos do estad
    ```prolog
    ?- estado.
 
-Estrutura do Código
+## Estrutura do Código
 
-O código é estruturado da seguinte maneira:
+1. O código é estruturado da seguinte maneira:
 
-    Definição de Blocos e Posições: Define os blocos e suas características.
-    Movimentação de Blocos: Predicados que controlam como os blocos podem ser movidos.
-    Verificação de Estabilidade: Funções que garantem que os blocos estão suportados adequadamente.
-    Planejamento e Heurísticas: Implementação de um planejador que utiliza heurísticas para mover blocos eficientemente.
-    Ações de Percepção: Permite ao agente perceber o que está em cada posição.
+    - Definição de Blocos e Posições: Define os blocos e suas características.
+    - Movimentação de Blocos: Predicados que controlam como os blocos podem ser movidos.
+    - Verificação de Estabilidade: Funções que garantem que os blocos estão suportados adequadamente.
+    - Planejamento e Heurísticas: Implementação de um planejador que utiliza heurísticas para mover blocos eficientemente.
+    - Ações de Percepção: Permite ao agente perceber o que está em cada posição.
 
-Contribuições
+## Contribuições
 
 Sinta-se à vontade para contribuir para este projeto, reportar problemas ou solicitar melhorias.
