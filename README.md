@@ -68,4 +68,4 @@ O comando resolver. irá gerar um plano de ações para mover os blocos do estad
 
 ## Contribuições
 
-Sinta-se à vontade para contribuir para este projeto, reportar problemas ou solicitar melhorias.
+Sinta-se à vontade para contribuir para este projeto, reportar problemas ou solicitar melhorias.(ok?)
