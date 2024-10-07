@@ -2,7 +2,7 @@
 
 # Planejador para o Mundo dos Blocos
 
-Este projeto implementa um **planejador** para o mundo dos blocos em Prolog, que realiza a regressão de metas para gerar planos de movimento entre diferentes estados de blocos dispostos em uma grade 5x5. O planejador garante que os blocos sejam movidos de maneira estável, evitando que sejam colocados em posições instáveis.
+Este projeto implementa um **planejador** para o mundo dos blocos em Prolog, que realiza a regressão de metas para gerar planos de movimento entre diferentes estados de blocos. O planejador garante que os blocos sejam movidos de maneira estável, evitando que sejam colocados em posições instáveis.
 
 ## Estrutura do Código
 
@@ -57,23 +57,28 @@ Os blocos são organizados no grid com posições e estados como:
 
 ```prolog
 estado_inicial([em(c, 1), em(c, 2), em(a, 4), em(b, 6), em(d, 4), em(d, 5), em(d, 6), livre(3)]).
+```
+
 Exemplo de Estado Final:
+```prolog
 estado_final([em(c, 1), em(c, 2), em(a, 3), em(d, 4), em(d, 5), em(b, 6), livre(7)]).
+```
+
 Transições:
+```prolog
 i1 para i2: Transição do estado inicial para um estado intermediário.
 i2 para variações (a, b, c): Transições entre estados intermediários variáveis (definidos como estado_intermediario_a, estado_intermediario_b, etc.).
+```
+
 Cada transição é implementada com planos específicos, como:
+```prolog
 ?- s_inicial_i1_para_i2.
 ?- s_inicial_i2_para_i2_a.
 ?- s_inicial_i2_para_i2_b.
 ?- s_inicial_i2_para_i2_c.
+```
+
 Esses predicados geram os planos e executam as ações correspondentes para mover os blocos entre os estados.
 
 Conclusão
 Este planejador automatizado em Prolog segue o modelo de regressão de metas e garante que blocos sejam movidos de maneira estável e eficiente no mundo dos blocos. Ele é ideal para entender como um sistema pode gerar e executar planos em ambientes estruturados, como um grid de posições numeradas.
-
-### Foco do `README.md`:
-- Instruções **simples e diretas** para uso no **SWISH Prolog**.
-- **Descrição detalhada** das funcionalidades e do código.
-- Instruções para **gerar e executar planos**.
-- **Exemplo de execução** e transições de estados.
