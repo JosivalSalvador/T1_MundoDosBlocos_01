@@ -91,11 +91,11 @@ Predicados de Percepção e Heurística
 
     Exemplo:
 
-    ```prolog
+```prolog
 
 look([1, 2], Objeto, Estado).
 
-    ```
+```
 
 Heurística: Para melhorar o planejamento, o sistema usa o predicado heuristica/2, que calcula um valor baseado no tamanho dos blocos e prioriza os blocos maiores para movimentos.
 
