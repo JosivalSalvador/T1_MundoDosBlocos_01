@@ -121,6 +121,32 @@ heuristica(Estado, Score).
 
 O sistema gerará e executará o plano de ações necessário para mover os blocos.
 
+
+## Como Executar no SWI-Prolog
+
+1. Instale o SWI-Prolog no seu computador, se ainda não tiver feito isso. Você pode baixar a versão mais recente no site oficial: SWI-Prolog Downloads.
+2. Após a instalação, abra o terminal (Linux ou macOS) ou o prompt de comando (Windows).
+3. Navegue até o diretório onde o seu arquivo .pl (arquivo Prolog) está salvo.
+4. Inicie o SWI-Prolog com o comando:
+
+```prolog
+swipl
+```
+
+Carregue o seu arquivo Prolog utilizando o comando:
+
+```prolog
+?- [nome_do_arquivo].
+```
+
+Defina o estado inicial e o estado final e chame o predicado plan/3 para gerar o plano:
+
+```prolog
+    ?- plan(estado_inicial, estado_final, Plano).
+```
+
+O sistema calculará o plano de ações necessário para alcançar o estado final a partir do estado inicial.
+
 ## Conclusão
 
 Este projeto demonstra como planejar e executar ações no mundo dos blocos, usando regras de lógica e planejamento automático. O uso de percepções e heurísticas torna o sistema mais eficiente e capaz de lidar com diferentes cenários e metas.
