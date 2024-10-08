@@ -94,7 +94,9 @@ Predicados de Percepção e Heurística
     ```prolog
 
 look([1, 2], Objeto, Estado).
-```
+
+    ```
+
 Heurística: Para melhorar o planejamento, o sistema usa o predicado heuristica/2, que calcula um valor baseado no tamanho dos blocos e prioriza os blocos maiores para movimentos.
 
 Exemplo:
@@ -102,7 +104,9 @@ Exemplo:
 ```prolog
 
     heuristica(Estado, Score).
+
 ```
+
 ## Como Executar
 
 1. Acesse o [SWISH](https://swish.swi-prolog.org/), um ambiente online para Prolog.
@@ -116,7 +120,7 @@ Exemplo:
 
 O sistema gerará e executará o plano de ações necessário para mover os blocos.
 
-Conclusão
+## Conclusão
 
 Este projeto demonstra como planejar e executar ações no mundo dos blocos, usando regras de lógica e planejamento automático. O uso de percepções e heurísticas torna o sistema mais eficiente e capaz de lidar com diferentes cenários e metas.
 
