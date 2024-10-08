@@ -81,15 +81,16 @@ estado_final([
     bloco(d, [3, 5]),   
     bloco(b, 6)         
 ]).
+
 ```
 O sistema gera um plano que moverá os blocos de acordo com as metas definidas. Por exemplo, moverá o bloco a da posição 4 para a posição 1 (sobre o bloco c), e o bloco d para as posições 3-5.
 
 Durante a execução, o sistema também usa percepções para verificar o estado atual, garantindo que as ações estejam corretas.
 Predicados de Percepção e Heurística
 
-    Percepção: O predicado look/3 permite que o sistema "olhe" para uma posição e identifique qual objeto (bloco) está ali. Isso é importante para validar o estado antes de executar uma ação.
+Percepção: O predicado look/3 permite que o sistema "olhe" para uma posição e identifique qual objeto (bloco) está ali. Isso é importante para validar o estado antes de executar uma ação.
 
-    Exemplo:
+Exemplo:
 
 ```prolog
 
@@ -103,7 +104,7 @@ Exemplo:
 
 ```prolog
 
-    heuristica(Estado, Score).
+heuristica(Estado, Score).
 
 ```
 
