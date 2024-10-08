@@ -1,100 +1,157 @@
-% Definição de blocos e seus tamanhos
-bloco(a, pequeno).
-bloco(b, medio).
-bloco(c, grande).
-bloco(d, grande).
+﻿% Predicado que verifica se todas as metas foram satisfeitas
+satisfied(State, Goals) :-
+    subset(Goals, State),
+    !, % Evita backtracking desnecessário
+    write('Goals satisfied'), nl.
 
-% Definindo a relação de tamanhos para garantir a estabilidade
-maior(grande, medio).
-maior(medio, pequeno).
+% Seleciona uma meta da lista de metas
+select_goal([Goal|_], Goal) :-
+    write('Selected goal: '), write(Goal), nl.
 
-% Definição de posições disponíveis
-posicao(1).
-posicao(2).
-posicao(3).
-posicao(4).
-posicao(5).
-posicao(6).
+% Verifica se a ação alcança a meta, manipulando variáveis não instanciadas
+achieves(Action, Goal) :-
+    adds(Action, Effects),
+    member(Goal, Effects),
+    !, % Evita backtracking desnecessário
+    write('Action '), write(Action), write(' achieves goal '), write(Goal), nl.
 
-% Verifica se o bloco está suportado corretamente (na base ou em dois blocos)
-suportado(X, Estado) :- 
-    member(em(X, [P1, P2]), Estado), posicao(P1), posicao(P2), P1 =< 2.  % Se está na base, posições 1-2
+% Verifica se a ação preserva todas as metas, sem violar as pré-condições
+preserves(Action, Goals) :-
+    deletes(Action, DeletedEffects),
+    \+ (member(Goal, DeletedEffects),
+        member(Goal, Goals)),
+    !, % Evita backtracking se uma condição falha
+    write('Action '), write(Action), write(' preserves all goals'), nl.
 
-suportado(X, Estado) :- 
-    member(em(X, [P1, P2]), Estado), 
-    member(em(Y, [PY1, PY2]), Estado), 
-    posicao(P1), posicao(P2), posicao(PY1), posicao(PY2), % Verifica posições válidas
-    bloco(X, TamanhoX), bloco(Y, TamanhoY), maior(TamanhoY, TamanhoX), 
-    PY1 = P1, PY2 = P2, % As posições dos blocos suportam o bloco X
-    suportado(Y, Estado).  % Suporte recursivo
+% Regressa as metas após uma ação, lidando com variáveis não instanciadas
+regress(Goals, Action, RegressedGoals) :-
+    adds(Action, Effects),
+    delete_all(Goals, Effects, RemainingGoals),
+    can(Action, Preconditions),  % Verifica pré-condições da ação
+    addnew(Preconditions, RemainingGoals, RegressedGoals),
+    write('Regressed goals: '), write(RegressedGoals), nl.
 
-% Verifica se a posição está livre no estado atual
-livre(P1, P2, Estado) :- \+ member(em(_, [P1, P2]), Estado).
+% Remove metas já satisfeitas
+remove_satisfied([], []).
+remove_satisfied([Goal | Rest], CleanGoals) :-
+    satisfied_goal(Goal),
+    !,
+    remove_satisfied(Rest, CleanGoals).
+remove_satisfied([Goal | Rest], [Goal | CleanRest]) :-
+    remove_satisfied(Rest, CleanRest).
 
-% Movimento de um bloco no estado atual (de uma posição dupla)
-pode_mover(Bloco, DeP1, DeP2, ParaP1, ParaP2, Estado) :-
-    bloco(Bloco, _),               % O objeto é um bloco válido
-    posicao(DeP1), posicao(DeP2), posicao(ParaP1), posicao(ParaP2),    % As posições são válidas
-    member(em(Bloco, [DeP1, DeP2]), Estado), % O bloco está na posição de origem
-    livre(ParaP1, ParaP2, Estado),           % As posições de destino estão livres
-    suportado(Bloco, Estado),      % O bloco está suportado corretamente antes de mover
-    DeP1 \= ParaP1, DeP2 \= ParaP2.  % O destino é diferente da origem
+% Predicado para verificar se uma meta já está satisfeita
+satisfied_goal(livre(Bloco)) :- estado_inicial(Estado), livre(Bloco, Estado).
+satisfied_goal(livre_destino(Posicao)) :- estado_inicial(Estado), livre_destino(Posicao, Estado).
 
-% Movimento de um bloco: gera um novo estado após mover
-move(Bloco, DeP1, DeP2, ParaP1, ParaP2, EstadoAtual, NovoEstado) :-
-    pode_mover(Bloco, DeP1, DeP2, ParaP1, ParaP2, EstadoAtual),
-    atualiza_estado(Bloco, [DeP1, DeP2], [ParaP1, ParaP2], EstadoAtual, NovoEstado),
-    write(Bloco), write(' movido de '), write(DeP1), write('-'), write(DeP2), 
-    write(' para '), write(ParaP1), write('-'), write(ParaP2), nl.
+% Verifica se uma ação pode ser realizada, usando pré-condições
+can(Action, Preconditions) :-
+    preconditions(Action, Preconditions),
+    % Verificar se as precondições são satisfeitas antes de continuar
+    forall(member(Precondition, Preconditions), satisfied_goal(Precondition)),
+    write('Action '), write(Action), write(' can be done with preconditions '), write(Preconditions), nl.
 
-% Atualiza o estado sem usar predicados dinâmicos
-atualiza_estado(Bloco, [DeP1, DeP2], [ParaP1, ParaP2], EstadoAtual, NovoEstado) :-
-    remove(em(Bloco, [DeP1, DeP2]), EstadoAtual, EstadoIntermediario), % Remove a posição antiga
-    adicionar(em(Bloco, [ParaP1, ParaP2]), EstadoIntermediario, NovoEstado).  % Adiciona nova posição
+% Predicado 'adds' que define os efeitos das ações
+adds(move(Bloco, _, Para), [bloco(Bloco, Para)]).
 
-% Remover elemento de uma lista
-remove(_, [], []).
-remove(X, [X|T], T).
-remove(X, [H|T], [H|R]) :- remove(X, T, R).
+% Predicado 'deletes' que define os efeitos deletados de uma ação
+deletes(move(Bloco, De, _), [bloco(Bloco, De)]).
 
-% Adicionar elemento a uma lista
-adicionar(X, L, [X|L]).
+% Remove todos os itens de Goals que estão em Effects
+delete_all([], _, []).
+delete_all([G|Goals], Effects, Result) :-
+    member(G, Effects),
+    delete_all(Goals, Effects, Result).
+delete_all([G|Goals], Effects, [G|Result]) :-
+    delete_all(Goals, Effects, Result).
 
-% Predicado que exibe o estado atual do mundo dos blocos
-estado(Estado) :-
-    write('Estado atual dos blocos: '), nl,
-    write(Estado), nl.
+% Adiciona novas metas ao plano
+addnew([], L, L).
+addnew([Goal | _], Goals, _) :-
+    impossible(Goal, Goals),
+    write('Impossible goal: '), write(Goal), nl,
+    !, fail.
+addnew([X | L1], L2, L3) :-
+    member(X, L2),
+    !, addnew(L1, L2, L3).
+addnew([X | L1], L2, [X | L3]) :-
+    addnew(L1, L2, L3).
 
-% Ação de percepção por câmera/sensor
-look(Posicao, Estado) :-
-    member(em(Objeto, Posicao), Estado),
-    write('Na posição '), write(Posicao), write(' há o objeto: '), write(Objeto), nl.
+% Predicado auxiliar para verificar impossibilidades
+impossible(_, _) :- false.
 
-% Verifica se uma posição está livre e informa
-posicao_livre([P1, P2], Estado) :-
-    livre(P1, P2, Estado),
-    write('As posições '), write(P1), write('-'), write(P2), write(' estão livres.'), nl.
 
-% Implementação da heurística especializada: distância do bloco até a meta
-heuristica(Bloco, [MetaP1, MetaP2], Estado, Custo) :-
-    member(em(Bloco, [P1, P2]), Estado),
-    Custo is abs(P1 - MetaP1) + abs(P2 - MetaP2).
+% Predicado 'preconditions' que define as pré-condições para as ações
+preconditions(move(Bloco, _, Para), [livre(Bloco), livre_destino(Para)]).
 
-% Planejamento: encontra uma sequência de ações para transformar um estado inicial em um final
-planejar(EstadoInicial, EstadoFinal, [mover(Bloco, DeP1, DeP2, ParaP1, ParaP2)|Plano], EstadoIntermediario) :-
-    member(em(Bloco, [DeP1, DeP2]), EstadoInicial),
-    member(em(Bloco, [ParaP1, ParaP2]), EstadoFinal),
-    move(Bloco, DeP1, DeP2, ParaP1, ParaP2, EstadoInicial, EstadoNovo),
-    planejar(EstadoNovo, EstadoFinal, Plano, EstadoIntermediario).
+% Verifica se o bloco está livre (não há nada em cima dele)
+livre(Bloco, Estado) :-
+    \+ (member(bloco(_, _, Bloco), Estado)),
+    write('Block '), write(Bloco), write(' is free'), nl, !.
 
-% Caso base: o planejamento termina quando o estado final é atingido
-planejar(EstadoFinal, EstadoFinal, [], EstadoFinal).
+% Verifica se o destino está livre (não há outro bloco ocupando a posição)
+livre_destino(Posicao, Estado) :-
+    \+ member(bloco(_, Posicao), Estado),
+    write('Position '), write(Posicao), write(' is free'), nl, !.
 
-% Função principal para iniciar o planejamento
-resolver :-
-    EstadoInicial = [em(c, [1, 2]), em(a, [4]), em(b, [6]), em(d, [4, 6])],  % Estado inicial correto
-    EstadoFinal = [em(c, [1, 2]), em(a, [1]), em(b, [6]), em(d, [3, 5])],   % Estado final desejado
-    estado(EstadoInicial),
-    planejar(EstadoInicial, EstadoFinal, Plano, EstadoFinalNovo),
-    write('Plano gerado: '), write(Plano), nl,
-    estado(EstadoFinalNovo).
+
+% Estado inicial do Mundo dos Blocos
+estado_inicial([
+    bloco(c, [1, 2]),   % Bloco azul (c) nas posições 1-2
+    bloco(a, 4),        % Bloco roxo (a) na posição 4
+    bloco(b, 6),        % Bloco amarelo (b) na posição 6
+    bloco(d, [4, 6])    % Bloco vermelho (d) empilhado nas posições 4-6
+]).
+
+% Estado final desejado
+estado_final([
+    bloco(c, [1, 2]),   % Bloco azul (c) nas posições 1-2
+    bloco(a, 1),        % Bloco roxo (a) sobre o bloco c
+    bloco(d, [3, 5]),   % Bloco vermelho (d) nas posições 3-5
+    bloco(b, 6)         % Bloco amarelo (b) na posição 6
+]).
+
+% Movimento dos blocos, respeitando restrições de estabilidade
+move(Bloco, De, Para, Estado, NovoEstado) :-
+    livre(Bloco, Estado),
+    livre_destino(Para, Estado),
+    \+ member(bloco(Bloco, Para), Estado),
+    retira_bloco(Bloco, De, Estado, TempEstado),
+    coloca_bloco(Bloco, Para, TempEstado, NovoEstado),
+    write('Moved block '), write(Bloco), write(' from '), write(De), write(' to '), write(Para), nl.
+
+
+
+% Atualização do estado ao remover um bloco de sua posição
+retira_bloco(Bloco, Posicao, [bloco(Bloco, Posicao) | Resto], Resto) :-
+    write('Retirando bloco '), write(Bloco), write(' da posição '), write(Posicao), nl.
+retira_bloco(Bloco, Posicao, [OutroBloco | Resto], [OutroBloco | NovoResto]) :-
+    retira_bloco(Bloco, Posicao, Resto, NovoResto).
+
+% Coloca um bloco em uma nova posição e atualiza o estado
+coloca_bloco(Bloco, Posicao, Estado, [bloco(Bloco, Posicao) | Estado]) :-
+    write('Colocando bloco '), write(Bloco), write(' na posição '), write(Posicao), nl.
+
+% Heurística para priorizar blocos maiores
+heuristica(Estado, Score) :-
+    findall(Tamanho, (member(bloco(_, Tamanho), Estado), Tamanho > 1), Tamanhos),
+    sumlist(Tamanhos, Score),
+    write('Heurística calculada: '), write(Score), nl.
+
+% Ação de percepção: olha para uma posição e identifica o bloco
+look(Posicao, Objeto, Estado) :-
+    member(bloco(Objeto, Posicao), Estado),
+    write('Looking at position '), write(Posicao), write(' and finding object '), write(Objeto), nl.
+
+% Gera um plano de ações para mover os blocos do estado inicial para o final
+plan(EstadoInicial, EstadoFinal, Plano) :-
+    regress(EstadoFinal, _, Plano),
+    executar_plano(Plano, EstadoInicial, EstadoFinal),
+    write('Planning complete'), nl.
+
+% Executa o plano gerado
+executar_plano([], Estado, Estado) :-
+    write('Plan execution complete'), nl.
+executar_plano([move(Bloco, De, Para) | Restante], EstadoAtual, EstadoFinal) :-
+    move(Bloco, De, Para, EstadoAtual, NovoEstado),
+    executar_plano(Restante, NovoEstado, EstadoFinal).

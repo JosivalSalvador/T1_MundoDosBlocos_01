@@ -1,84 +1,122 @@
-﻿SWISH Prolog:
+﻿# Projeto: Mundo dos Blocos com Planejamento e Percepção
 
-# Planejador para o Mundo dos Blocos
+Este projeto foi desenvolvido com base no conceito de manipulação de blocos descrito no Capítulo 17, página 403, do livro de Ivan Bratko. O objetivo é simular um sistema de planejamento baseado em ações, utilizando lógica de Prolog para mover blocos entre diferentes estados enquanto satisfaz metas definidas. Este README detalha o funcionamento do código, as estruturas de dados utilizadas, as funcionalidades implementadas e como executá-lo.
 
-Este projeto implementa um **planejador** para o mundo dos blocos em Prolog, que realiza a regressão de metas para gerar planos de movimento entre diferentes estados de blocos. O planejador garante que os blocos sejam movidos de maneira estável, evitando que sejam colocados em posições instáveis.
+## Descrição Geral
 
-## Estrutura do Código
+O projeto implementa um sistema de planejamento no "Mundo dos Blocos", no qual diferentes blocos estão posicionados em um grid, com posições livres ou ocupadas. O sistema permite:
 
-O código foi projetado para trabalhar com um conjunto de predicados principais que permitem:
-1. Verificar se as metas foram atingidas (`satisfied/2`).
-2. Regressar metas após uma ação ser executada (`regress/3`).
-3. Gerar o plano para mover blocos entre diferentes estados (`plan/3`).
-4. Executar as ações geradas no plano para mover blocos no mundo.
+- Planejar movimentos de blocos de uma configuração inicial para uma final.
+- Executar ações que movem blocos, garantindo que as restrições (como posições livres e pré-condições) sejam respeitadas.
+- Utilizar percepções para observar a posição de blocos antes de executar ações.
+- Verificar se todas as metas foram alcançadas, regredir metas e planejar com base nas pré-condições de ações.
 
-### Predicados Principais:
+### Regras Básicas do Mundo dos Blocos
 
-- **`gerar_todos_planos/0`**: Gera os planos necessários para mover os blocos entre os estados iniciais e finais, passando por estados intermediários.
-- **`plan/3`**: Este predicado é responsável por criar um plano de ações que leva do estado inicial ao estado final, seguindo um processo de regressão de metas.
-- **`executar_plano/1`**: Executa cada ação do plano gerado e realiza as transições de estado.
-- **`can/2`**: Verifica as condições necessárias para que uma ação seja possível.
-- **`achieves/2`**: Determina se uma ação atinge uma determinada meta.
+- **Estados**: Um estado é uma configuração que descreve onde cada bloco está localizado. Os blocos podem estar sobre o grid em posições únicas ou em pilhas que ocupam múltiplas posições.
+- **Ações**: As ações consistem em mover blocos de uma posição para outra, respeitando as pré-condições, como se o bloco está livre para ser movido e se a nova posição está desocupada.
+- **Metas**: As metas descrevem o estado final desejado, que pode incluir posições específicas para os blocos ou se um bloco está empilhado sobre outro.
+  
+## Estruturas Principais
 
-### Funções Auxiliares:
-
-- **`conc/3`**: Junta dois planos.
-- **`delete_all/3`**: Remove metas que já foram atingidas.
-- **`addnew/3`**: Adiciona novas metas ao conjunto de metas.
-- **`preserves/2`**: Garante que a ação não destrua as metas que ainda precisam ser satisfeitas.
-
-## Como executar no SWISH Prolog
-
-1. Acesse o site do [SWISH Prolog](https://swish.swi-prolog.org/).
-2. Cole o código do arquivo no editor de código disponível no site.
-3. Após colar o código, execute o predicado **`gerar_todos_planos/0`** para gerar e executar os planos de transição de blocos entre os estados. Digite o comando abaixo na linha de consulta:
-
+1. **Estado Inicial**: Define onde cada bloco está no início da execução.
     ```prolog
-    ?- gerar_todos_planos.
+    estado_inicial([
+        bloco(c, [1, 2]),   % Bloco c nas posições 1 e 2
+        bloco(a, 4),        % Bloco a na posição 4
+        bloco(b, 6),        % Bloco b na posição 6
+        bloco(d, [4, 6])    % Bloco d empilhado nas posições 4 e 6
+    ]).
     ```
 
-4. O resultado exibirá os planos gerados, seguidos da execução das ações para mover os blocos no mundo definido.
+2. **Estado Final**: Define o objetivo final, onde cada bloco deve estar após a execução do plano.
+    ```prolog
+    estado_final([
+        bloco(c, [1, 2]),   % Bloco c permanece nas posições 1-2
+        bloco(a, 1),        % Bloco a deve estar sobre o bloco c
+        bloco(d, [3, 5]),   % Bloco d deve estar nas posições 3-5
+        bloco(b, 6)         % Bloco b permanece na posição 6
+    ]).
+    ```
 
-### Exemplo de Execução:
+3. **Predicados Principais**:
+    - `satisfied/2`: Verifica se todas as metas foram alcançadas no estado atual.
+    - `select_goal/2`: Seleciona uma meta da lista de metas para tentar alcançá-la.
+    - `achieves/2`: Verifica se uma ação pode alcançar uma meta específica.
+    - `preserves/2`: Verifica se uma ação preserva todas as metas sem violá-las.
+    - `regress/3`: Regressa as metas após uma ação, levando em consideração pré-condições.
+    - `can/2`: Verifica se uma ação pode ser executada baseado em suas pré-condições.
+    - `move/5`: Move um bloco de uma posição para outra, atualizando o estado.
+    - `look/3`: Percepção que permite "olhar" uma posição e identificar o objeto nela.
 
-Ao executar o predicado `gerar_todos_planos`, o sistema gerará os planos entre os estados intermediários e exibirá o seguinte tipo de saída:
+## Funcionamento do Código
 
-Plano gerado de i1 para i2: [mover(a,4,3), mover(b,6,5)] Movendo o bloco a da posição 4 para a posição 3 Movendo o bloco b da posição 6 para a posição 5 ...
+O fluxo básico do sistema é o seguinte:
 
-### Estrutura dos Estados:
+1. **Seleção de Metas**: O sistema primeiro verifica as metas que precisam ser alcançadas.
+2. **Planejamento de Ações**: Para cada meta, o sistema seleciona uma ação que possa satisfazê-la, verificando as pré-condições necessárias. Se uma ação não puder ser executada, o sistema regressa as metas e recalcula os passos.
+3. **Execução de Ações**: As ações são executadas em sequência, movendo blocos de uma posição para outra. Cada movimento atualiza o estado do mundo dos blocos.
+4. **Verificação de Satisfação de Metas**: O sistema verifica se todas as metas foram alcançadas após a execução de cada ação.
 
-Os blocos são organizados no grid com posições e estados como:
+### Exemplo de Execução
 
-- **Estado Inicial (`estado_inicial/1`)**: Define as posições iniciais dos blocos.
-- **Estado Final (`estado_final/1`)**: Define a meta final que o sistema deseja alcançar.
-- **Estados Intermediários**: Posições intermediárias dos blocos durante as transições.
-
-#### Exemplo de Estado Inicial:
+Dado o estado inicial:
 
 ```prolog
-estado_inicial([em(c, 1), em(c, 2), em(a, 4), em(b, 6), em(d, 4), em(d, 5), em(d, 6), livre(3)]).
+estado_inicial([
+    bloco(c, [1, 2]),  
+    bloco(a, 4),        
+    bloco(b, 6),        
+    bloco(d, [4, 6])    
+]).
 ```
 
-Exemplo de Estado Final:
+E o estado final desejado:
+
 ```prolog
-estado_final([em(c, 1), em(c, 2), em(a, 3), em(d, 4), em(d, 5), em(b, 6), livre(7)]).
-```
 
-Transições:
+estado_final([
+    bloco(c, [1, 2]),   
+    bloco(a, 1),        
+    bloco(d, [3, 5]),   
+    bloco(b, 6)         
+]).
+```
+O sistema gera um plano que moverá os blocos de acordo com as metas definidas. Por exemplo, moverá o bloco a da posição 4 para a posição 1 (sobre o bloco c), e o bloco d para as posições 3-5.
+
+Durante a execução, o sistema também usa percepções para verificar o estado atual, garantindo que as ações estejam corretas.
+Predicados de Percepção e Heurística
+
+    Percepção: O predicado look/3 permite que o sistema "olhe" para uma posição e identifique qual objeto (bloco) está ali. Isso é importante para validar o estado antes de executar uma ação.
+
+    Exemplo:
+
+    ```prolog
+
+look([1, 2], Objeto, Estado).
+```
+Heurística: Para melhorar o planejamento, o sistema usa o predicado heuristica/2, que calcula um valor baseado no tamanho dos blocos e prioriza os blocos maiores para movimentos.
+
+Exemplo:
+
 ```prolog
-i1 para i2: Transição do estado inicial para um estado intermediário.
-i2 para variações (a, b, c): Transições entre estados intermediários variáveis (definidos como estado_intermediario_a, estado_intermediario_b, etc.).
-```
 
-Cada transição é implementada com planos específicos, como:
-```prolog
-?- s_inicial_i1_para_i2.
-?- s_inicial_i2_para_i2_a.
-?- s_inicial_i2_para_i2_b.
-?- s_inicial_i2_para_i2_c.
+    heuristica(Estado, Score).
 ```
+## Como Executar
 
-Esses predicados geram os planos e executam as ações correspondentes para mover os blocos entre os estados.
+1. Acesse o [SWISH](https://swish.swi-prolog.org/), um ambiente online para Prolog.
+2. Copie e cole o código Prolog no editor do SWISH.
+3. Defina o estado inicial e o estado final.
+4. Execute o plano chamando o predicado `plan/3`:
+
+    ```prolog
+    plan(estado_inicial, estado_final, Plano).
+    ```
+
+O sistema gerará e executará o plano de ações necessário para mover os blocos.
 
 Conclusão
-Este planejador automatizado em Prolog segue o modelo de regressão de metas e garante que blocos sejam movidos de maneira estável e eficiente no mundo dos blocos. Ele é ideal para entender como um sistema pode gerar e executar planos em ambientes estruturados, como um grid de posições numeradas.
+
+Este projeto demonstra como planejar e executar ações no mundo dos blocos, usando regras de lógica e planejamento automático. O uso de percepções e heurísticas torna o sistema mais eficiente e capaz de lidar com diferentes cenários e metas.
+
