@@ -144,7 +144,9 @@ look(Posicao, Objeto, Estado) :-
     write('Looking at position '), write(Posicao), write(' and finding object '), write(Objeto), nl.
 
 % Gera um plano de ações para mover os blocos do estado inicial para o final
-plan(EstadoInicial, EstadoFinal, Plano) :-
+plan(_, _, Plano) :-
+    estado_inicial(EstadoInicial), % Expande o estado inicial
+    estado_final(EstadoFinal),     % Expande o estado final
     regress(EstadoFinal, _, Plano),
     executar_plano(Plano, EstadoInicial, EstadoFinal),
     write('Planning complete'), nl.
